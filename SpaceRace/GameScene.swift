@@ -68,6 +68,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        var location = touch.location(in: self)
+        
+        // clamp movement y axis 100 and 668
+        if location.y < 100 {
+            location.y = 100
+        } else if location.y > 668 {
+            location.y = 668
+        }
+        
+        player.position = location
+        
+    }
+    
+    // collision begin
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        // create and position explosion emitter node
+        let explosion = SKEmitterNode(fileNamed: "explosion")!
+        
+        explosion.position = player.position
+        addChild(explosion)
+        
+        // remove player and set game over (the player lost)
+        player.removeFromParent()
+        isGameOver = true
+    }
+    
     @objc func createEnemy() {
         // random enemy string
         guard let enemy = possibleEnemies.randomElement() else { return }
