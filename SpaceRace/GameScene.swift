@@ -13,6 +13,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var player: SKSpriteNode!
     var scoreLabel: SKLabelNode!
     
+    var possibleEnemies = ["ball", "hammer", "tv"]
+    var gameTimer: Timer?
+    var isGameOver = false
+    
     var score = 0 {
         didSet {
             scoreLabel.text = "Score: \(score)"
@@ -36,7 +40,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.physicsBody = SKPhysicsBody(texture: player.texture!, size: player.size)
         // enable collisions with the scene objects
         player.physicsBody?.contactTestBitMask = 1
-        player.physicsBody?.affectedByGravity = false
         addChild(player)
         
         // setup score label
@@ -46,8 +49,47 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(scoreLabel)
         
         score = 0
+        
+        physicsWorld.gravity = .zero
+        physicsWorld.contactDelegate = self
+        
+        gameTimer = Timer.scheduledTimer(timeInterval: 0.35, target: self, selector: #selector(createEnemy), userInfo: nil, repeats: true)
     }
     
     override func update(_ currentTime: TimeInterval) {
+        for node in children {
+            if node.position.x < -300 {
+                node.removeFromParent()
+            }
+            
+            if !isGameOver {
+                score += 1
+            }
+        }
+    }
+    
+    @objc func createEnemy() {
+        // random enemy string
+        guard let enemy = possibleEnemies.randomElement() else { return }
+        
+        // create enemy sprite and position in game scene
+        let sprite = SKSpriteNode(imageNamed: enemy)
+        sprite.position = CGPoint(x: 1200, y: Int.random(in: 50...736))
+        addChild(sprite)
+        
+        // setup physics body and collision mask
+        sprite.physicsBody = SKPhysicsBody(texture: sprite.texture!, size: sprite.size)
+        sprite.physicsBody?.collisionBitMask = 1
+        
+        // setup physics movement (left to right while spinning)
+        // move left to right
+        sprite.physicsBody?.velocity = CGVector(dx: -500, dy: 0)
+        
+        // set rotation
+        sprite.physicsBody?.angularVelocity = 5
+        
+        // set linear and angular damping to 0
+        sprite.physicsBody?.linearDamping = 0
+        sprite.physicsBody?.angularDamping = 0
     }
 }
